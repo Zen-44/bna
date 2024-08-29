@@ -6,6 +6,7 @@ WORKDIR /idena
 ADD idena-conf.json /idena
 
 RUN apt-get update && apt-get install -y curl
+RUN apt install git -y
 ADD https://github.com/idena-network/idena-go/releases/download/v${IDENA_VERSION}/idena-node-linux-${IDENA_VERSION} /idena-go
 RUN chmod +x /idena-go
 
