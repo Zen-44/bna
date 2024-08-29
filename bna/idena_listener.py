@@ -157,7 +157,7 @@ class IdenaListener:
                 self.log.warning(f"TX missing from node: {tx_hash}")
                 tx = await self.api_req(f'transaction/{tx_hash}')
                 await asyncio.sleep(0.2)
-                tx['timestamp'] = int(datetime.datetime.strptime(tx['timestamp'], "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=datetime.timezone.utc).timestamp())
+                tx['timestamp'] = int(datetime.strptime(tx['timestamp'], "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc).timestamp())
                 tx['type'] = RPC_API_TYPE_MAP[tx['type']]
             elif tx is None:
                 self.log.warning(f"TX missing from node and no API URL is set: {tx_hash}")
