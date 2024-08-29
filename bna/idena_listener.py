@@ -36,6 +36,7 @@ RPC_API_TYPE_MAP = {
     'DeleteFlipTx': "deleteFlip",
     'DeployContractTx': "deployContract",
     'CallContractTx': "callContract",
+    'CallContract': "callContract",
     'TerminateContractTx': "terminateContract",
     'DelegateTx': "delegate",
     'UndelegateTx': "undelegate",
