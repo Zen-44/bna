@@ -143,6 +143,10 @@
         "type": "foundation",
         "chain": "idena"
     },
+    "0x6e501ecc941b412dec16243139c625c292c40416": {
+        "name": "Dev controlled wallet",
+        "type": "personal"
+    },
     "0xb0C3fD00cCd9CEAf17dad2524212021953D6ce0B": {
         "name": "Rioda's pool",
         "type": "personal"
