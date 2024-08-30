@@ -746,7 +746,7 @@ class Bot:
         self.activity['block'].update({ev.chain: ev.height})
         if time.time() - self.last_activity_update < 10:
             return
-        act_str = f"IDNA: {self.activity['block'][CHAIN_IDENA]} BSC: {self.activity['block'][CHAIN_BSC]}"
+        act_str = f"IDENA: {self.activity['block'][CHAIN_IDENA]} BSC: {self.activity['block'][CHAIN_BSC]}"
         self.last_activity_update = time.time()
         await self.disbot.change_presence(status=disnake.Status.online, activity=disnake.Activity(type=disnake.ActivityType.watching, name=act_str))
 
