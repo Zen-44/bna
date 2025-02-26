@@ -197,11 +197,13 @@ async def bitmart_trades(log, conf: CexConfig, prices: dict, event_chan):
         try:
             await asyncio.sleep(conf.interval + random.random())
             r = await s.get('https://api-cloud.bitmart.com/spot/quotation/v3/trades?symbol=IDNA_USDT')
-            trades = (await r.json())['data']
+            response = await r.json()
+            trades = response['data']
+            
             if trades and len(trades) > 0:
                 quote_price = prices[MARKETS[MARKET_BITMART]['quote']]
                 trades = list(map(lambda t: Trade.from_bitmart(t, quote_price),
-                           filter(lambda t: t['order_time'] > last_trade_id, trades)))
+                           filter(lambda t: int(t[1]) > last_trade_id, trades)))
                 if len(trades) == 0:
                     continue
                 event_chan.put_nowait(trades)
@@ -213,3 +215,4 @@ async def bitmart_trades(log, conf: CexConfig, prices: dict, event_chan):
             log.error(f'BitMart exception: "{e}"', exc_info=True)
             await asyncio.sleep(conf.interval)
     await s.close()
+
