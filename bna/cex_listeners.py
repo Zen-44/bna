@@ -66,17 +66,17 @@ class Trade:
     buy: bool
 
     def from_bitmart(trade, quote_price: float):
-    trade_dict = {
-        'id': int(trade[1]),
-        'market': MARKET_BITMART,
-        'timeStamp': datetime.fromtimestamp(int(trade[1]) / 1000, tz=timezone.utc),
-        'amount': Decimal(trade[3]),
-        'price': Decimal(trade[2]),
-        'buy': trade[4] == 'buy',
-        'quote': MARKETS[MARKET_BITMART]['quote'],
-    }
-    trade_dict['usd_value'] = float(trade_dict['amount'] * trade_dict['price'] * Decimal(quote_price))
-    return Trade(**trade_dict)
+        trade_dict = {
+            'id': int(trade[1]),
+            'market': MARKET_BITMART,
+            'timeStamp': datetime.fromtimestamp(int(trade[1]) / 1000, tz=timezone.utc),
+            'amount': Decimal(trade[3]),
+            'price': Decimal(trade[2]),
+            'buy': trade[4] == 'buy',
+            'quote': MARKETS[MARKET_BITMART]['quote'],
+        }
+        trade_dict['usd_value'] = float(trade_dict['amount'] * trade_dict['price'] * Decimal(quote_price))
+        return Trade(**trade_dict)
 
     def from_vitex(trade, quote_price: float):
         trade['id'] = int(trade['timestamp'])  # shrug
