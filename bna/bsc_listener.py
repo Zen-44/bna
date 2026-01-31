@@ -69,10 +69,14 @@ class BscListener:
                 # @TODO Future: This is ~1M messages per month for not much benefit
                 await self.ws_sub(websocket, ["newHeads"], 'head')
                 await self.ws_sub(websocket, ["logs", {'address': WIDNA_CONTRACT, 'topics': [TRANSFER_TOPIC]}], 'log')
+
                 for lp in self.db.known_by_type['pool'].keys():
                     await self.ws_sub(websocket, ["logs", {'address': lp, 'topics': LP_TOPICS}], 'log')
+                    await asyncio.sleep(0.1)
                     await self.ws_sub(websocket, ["logs", {'topics': [TRANSFER_TOPIC, None, widen(lp)]}], 'log')
+                    await asyncio.sleep(0.1)
                     await self.ws_sub(websocket, ["logs", {'topics': [TRANSFER_TOPIC, widen(lp), None]}], 'log')
+                    await asyncio.sleep(0.1)
                 while True:
                     # @Update: for Python 3.11
                     # try:
@@ -88,9 +92,14 @@ class BscListener:
                     #     break
                     j = json.loads(r)
                     if 'id' in j:
+                        if 'error' in j:
+                            self.log.error(f"WS subscription error: {j['error']}")
+                            continue
                         # print(j)
                         self.subs[j['result']] = self.subs[j['id']]
+                        self.log.info(f"Subscription active: {self.subs[j['id']]}")
                     if 'method' in j:
+                        # self.log.debug(f"WS Recv method={j.get('method')}")
                         if j['method'] == 'eth_subscription':
                             sub_name = self.subs[j['params']['subscription']]
                             if sub_name == 'head':
@@ -146,11 +155,12 @@ class BscListener:
 
     async def ws_sub(self, ws, params: list, name: str):
         self.last_sub_id += 1
-        sub = {'id': self.last_sub_id, 'method': 'eth_subscribe', 'params': params}
+        sub = {'jsonrpc': '2.0', 'id': self.last_sub_id, 'method': 'eth_subscribe', 'params': params}
         self.subs[self.last_sub_id] = name
         await ws.send(json.dumps(sub))
 
     async def new_log(self, log: dict):
+        # self.log.debug(f"New log received: {log.get('transactionHash')}")
         log: BscLog = BscLog(**log)
         log.convert()
         self.log.debug(f"New tf_log: {log.blockNumber}:{log.logIndex:3d}, {log.removed=}, {log.transactionHash}")
@@ -377,7 +387,7 @@ class BscListener:
                     "fromBlock": hex(batch_from + 1), "toBlock": hex(batch_until - 1)}]
             # Fetch iDNA transfer logs
             logs: list[dict] = await self.rpc_req('eth_getLogs', params, url=url) or []
-            for lp in self.db.known_by_type['pool'].keys():
+            for lp, pool_data in self.db.known_by_type['pool'].items():
                 # Fetch LP token mint/burn logs
                 params[0]['topics'] = LP_TOPICS
                 params[0]['address'] = lp
@@ -385,7 +395,7 @@ class BscListener:
                 await asyncio.sleep(0.3) # rate limiting
 
                 # Fetch transfer of any token to/from pools
-                del params[0]['address']
+                params[0]['address'] = [pool_data['token0'], pool_data['token1']]
                 params[0]['topics'] = [TRANSFER_TOPIC, widen(lp), None]
                 logs.extend(await self.rpc_req('eth_getLogs', params=params, url=url) or [])
                 params[0]['topics'] = [TRANSFER_TOPIC, None, widen(lp)]
@@ -403,12 +413,12 @@ class BscListener:
                 if blockNumber not in self.block_timestamps and blockNumber not in new_block_times:
                     block = await self.rpc_req('eth_getBlockByNumber', [hex(blockNumber), False])
                     timestamp = int(block['timestamp'], 16)
-                    self.log.debug(f"Missing head: \t{blockNumber} {timestamp}")
+                    # self.log.debug(f"Missing head: \t{blockNumber} {timestamp}")
                     new_block_times[blockNumber] = timestamp
                 hash = log['transactionHash']
                 if hash not in self.tx_signers and hash not in new_signers:
                     signer = await self.fetch_signer(hash)
-                    self.log.debug(f"Missing signer: \t{hash} {signer}")
+                    # self.log.debug(f"Missing signer: \t{hash} {signer}")
                     new_signers[hash] = signer
 
             # This is done separately to avoid awaiting in the middle of state modification
@@ -441,8 +451,8 @@ class BscListener:
     async def rpc_req(self, method, params, id=0, attempts=10, url=None) -> dict:
         if url is None:
             url = self.rpc_url
-        self.log.debug(f"rpc_req {method=}, {params=} url={url[:30]}")
-        req = {"method": method, "params": params, "id": id}
+        # self.log.debug(f"rpc_req {method=}, {params=} url={url[:30]}")
+        req = {"jsonrpc": "2.0", "method": method, "params": params, "id": id}
         attempt = 0
         resp = None
         while attempt < attempts:

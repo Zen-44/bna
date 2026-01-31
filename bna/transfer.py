@@ -25,6 +25,8 @@ class BscLog:
     removed: bool
     signer: str = "0x0000000000000000000000000000000000000000"
 
+    blockTimestamp: int = 0
+
     # Dumb, but shorter than writing my own __init__ lmao
     def convert(self):
         self.blockNumber = int(self.blockNumber, base=16)
