@@ -52,8 +52,8 @@ async def main(db: Database, bot: Bot, conf: Config, log: Logger):
         cex_log = log.getChild("CX")
         if not passive:
             asyncio.create_task(bitmart_trades(cex_log, conf.cex, db.prices, trade_event_chan), name="bitmart_trades")
-            asyncio.create_task(probit_trades(cex_log, conf.cex, db.prices, trade_event_chan), name="probit_trades")
-            asyncio.create_task(vitex_trades(cex_log, conf.cex, db.prices, trade_event_chan), name="vitex_trades")
+            # asyncio.create_task(probit_trades(cex_log, conf.cex, db.prices, trade_event_chan), name="probit_trades")
+            # asyncio.create_task(vitex_trades(cex_log, conf.cex, db.prices, trade_event_chan), name="vitex_trades")
             asyncio.create_task(idna.run(idna_event_chan), name="idna_run")
             asyncio.create_task(bsc.run(bsc_event_chan), name="bsc_run")
         cg_tokens = db.addrs_of_type('token', full=True)
